@@ -1,0 +1,52 @@
+=============================================
+  i-flash — Sistema de Gestão
+  Versão 1.0
+=============================================
+
+COMO USAR:
+----------
+1. Coloque a pasta "iflash" em qualquer lugar do PC
+   (ex: C:\iflash\ ou na Área de Trabalho)
+
+2. Dê DUPLO CLIQUE no arquivo:
+   👉 INICIAR-iflash.vbs
+
+3. O sistema abrirá no navegador automaticamente.
+
+ACESSO:
+-------
+• No PC da loja:  http://localhost:5000
+• No celular:     Clique no ícone 📱 no topo do sistema
+                  (celular deve estar no mesmo Wi-Fi)
+
+LOGIN PADRÃO:
+-------------
+• Usuário: admin
+• Senha:   1234
+
+ESTRUTURA DOS ARQUIVOS:
+-----------------------
+iflash/
+├── INICIAR-iflash.vbs   ← Clique aqui para abrir
+├── app.py               ← Servidor Python
+├── requirements.txt     ← Dependências
+├── iflash.db            ← Banco de dados (criado automaticamente)
+├── database/
+│   └── db.py
+├── templates/
+│   └── index.html
+└── static/
+    └── uploads/
+
+BANCO DE DADOS:
+---------------
+Todos os dados ficam salvos no arquivo "iflash.db"
+Faça backup deste arquivo regularmente!
+
+REQUISITOS:
+-----------
+• Python 3.8 ou superior (já instalado no PC)
+• Flask (instalado automaticamente pelo VBS)
+• Navegador: Chrome, Edge ou Firefox
+
+=============================================

@@ -1,0 +1,1448 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>i-flash Sistema</title>
+<link rel="manifest" href="/static/manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="i-flash">
+<meta name="theme-color" content="#111111">
+<link rel="apple-touch-icon" href="/static/icon-192.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{
+  --bg:#12131a;--bg2:#1a1b26;--bg3:#22243a;--bg4:#2a2d45;
+  --border:#32355a;--border2:#3d4070;
+  --accent:#4f8ef7;--accent2:#7c3aed;
+  --green:#22c55e;--red:#ef4444;--yellow:#f59e0b;--orange:#f97316;
+  --text:#e8eaf6;--text2:#9fa3c8;--text3:#5c6090;
+  --card:#1e2035;--card2:#252840;
+  --radius:14px;--radius-sm:9px;--radius-xs:6px;
+  --shadow:0 2px 12px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+/* ── LAYOUT PC ── */
+#app{display:none;flex-direction:row;min-height:100vh}
+.sidebar{width:220px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;bottom:0;left:0;z-index:50;transition:transform .3s}
+.sidebar-logo{padding:22px 20px 16px;border-bottom:1px solid var(--border)}
+.brand{font-size:26px;font-weight:800;letter-spacing:-1px}.brand span{color:var(--accent)}
+.brand-sub{font-size:10px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-top:2px}
+.sidebar-nav{flex:1;padding:12px 0;overflow-y:auto}
+.nav-item{display:flex;align-items:center;gap:12px;padding:11px 18px;cursor:pointer;transition:all .2s;border-radius:0;color:var(--text2);font-size:13px;font-weight:500;margin:1px 8px;border-radius:var(--radius-sm)}
+.nav-item:hover{background:var(--bg3);color:var(--text)}
+.nav-item.active{background:rgba(79,142,247,.15);color:var(--accent);font-weight:600}
+.nav-item.active .nav-icon{filter:drop-shadow(0 0 4px var(--accent))}
+.nav-icon{font-size:18px;width:22px;text-align:center;flex-shrink:0}
+.sidebar-footer{padding:14px 16px;border-top:1px solid var(--border)}
+.user-info{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg3);border-radius:var(--radius-sm);cursor:pointer}
+.user-avatar{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.user-name{font-size:13px;font-weight:600;flex:1}
+.user-role{font-size:10px;color:var(--text3)}
+.main{margin-left:220px;flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:40}
+.topbar-title{font-size:18px;font-weight:700}
+.topbar-actions{display:flex;align-items:center;gap:10px}
+.page-content{padding:24px;flex:1}
+
+/* ── MOBILE ── */
+.mobile-topbar{display:none;position:fixed;top:0;left:0;right:0;z-index:100;background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 16px;align-items:center;justify-content:space-between}
+.mobile-brand{font-size:20px;font-weight:800;letter-spacing:-1px}.mobile-brand span{color:var(--accent)}
+.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:100;background:var(--bg2);border-top:1px solid var(--border);padding:6px 0 12px}
+.mobile-nav-inner{display:flex;justify-content:space-around}
+.mobile-nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:5px 10px;border-radius:10px;min-width:52px}
+.mobile-nav-icon{font-size:20px}
+.mobile-nav-label{font-size:9px;color:var(--text3);font-weight:500}
+.mobile-nav-item.active .mobile-nav-label{color:var(--accent)}
+
+/* ── SCREENS ── */
+.screen{display:none}.screen.active{display:block}
+
+/* ── COMPONENTS ── */
+.section-title{font-size:20px;font-weight:700;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:14px;box-shadow:var(--shadow)}
+.card2{background:var(--card2);border:1px solid var(--border2);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+.card-title{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;font-weight:600;margin-bottom:12px}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;position:relative;overflow:hidden;box-shadow:var(--shadow)}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.stat-card.blue::before{background:linear-gradient(90deg,var(--accent),#6db3ff)}
+.stat-card.purple::before{background:linear-gradient(90deg,var(--accent2),#a855f7)}
+.stat-card.green::before{background:linear-gradient(90deg,var(--green),#4ade80)}
+.stat-card.yellow::before{background:linear-gradient(90deg,var(--yellow),#fbbf24)}
+.stat-card.orange::before{background:linear-gradient(90deg,var(--orange),#fb923c)}
+.stat-icon{font-size:24px;margin-bottom:8px}
+.stat-value{font-size:26px;font-weight:800;letter-spacing:-1px}
+.stat-label{font-size:11px;color:var(--text3);margin-top:3px;text-transform:uppercase;letter-spacing:.5px}
+
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11px;color:var(--text2);margin-bottom:5px;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.field input,.field select,.field textarea{width:100%;background:var(--bg3);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--text);padding:10px 13px;font-size:14px;outline:none;transition:border-color .2s;font-family:inherit}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent)}
+.field select option{background:var(--bg3)}
+.field textarea{resize:vertical;min-height:60px}
+.row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+
+.btn{border:none;border-radius:var(--radius-sm);padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit;display:inline-flex;align-items:center;gap:6px}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:#3d7ef5}
+.btn-secondary{background:var(--bg3);color:var(--text2);border:1.5px solid var(--border)}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
+.btn-success{background:rgba(34,197,94,.15);color:var(--green);border:1.5px solid rgba(34,197,94,.3)}
+.btn-danger{background:rgba(239,68,68,.12);color:var(--red);border:1.5px solid rgba(239,68,68,.25)}
+.btn-warning{background:rgba(245,158,11,.12);color:var(--yellow);border:1.5px solid rgba(245,158,11,.25)}
+.btn-lg{padding:13px 24px;font-size:15px;border-radius:var(--radius-sm);width:100%}
+.btn-sm{padding:7px 13px;font-size:12px}
+.btn-icon{padding:8px;border-radius:var(--radius-xs)}
+
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+.badge-blue{background:rgba(79,142,247,.15);color:var(--accent)}
+.badge-green{background:rgba(34,197,94,.15);color:var(--green)}
+.badge-red{background:rgba(239,68,68,.15);color:var(--red)}
+.badge-yellow{background:rgba(245,158,11,.15);color:var(--yellow)}
+.badge-purple{background:rgba(124,58,237,.15);color:#a78bfa}
+.badge-orange{background:rgba(249,115,22,.15);color:var(--orange)}
+
+.search-bar{background:var(--bg3);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:9px 13px;display:flex;align-items:center;gap:9px;margin-bottom:14px}
+.search-bar input{background:none;border:none;color:var(--text);font-size:14px;flex:1;outline:none;font-family:inherit}
+
+.table-wrap{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse}
+th{background:var(--bg3);padding:11px 14px;text-align:left;font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+td{padding:12px 14px;border-top:1px solid var(--border);font-size:13px;vertical-align:middle}
+tr:hover td{background:rgba(79,142,247,.04)}
+.td-name{font-weight:600;color:var(--text)}
+.td-sub{font-size:11px;color:var(--text3);margin-top:2px}
+
+.tabs{display:flex;gap:4px;margin-bottom:16px;background:var(--bg3);border-radius:var(--radius-sm);padding:4px;border:1px solid var(--border)}
+.tab{flex:1;text-align:center;padding:8px 6px;border-radius:7px;font-size:12px;font-weight:600;color:var(--text3);cursor:pointer;transition:all .2s;white-space:nowrap}
+.tab.active{background:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(79,142,247,.3)}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:24px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.modal-title{font-size:18px;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:10px}
+.modal-actions{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+
+/* Mobile modal */
+@media(max-width:768px){
+  .modal-overlay{align-items:flex-end;padding:0}
+  .modal{border-radius:20px 20px 0 0;max-width:100%;padding:20px 16px 32px}
+  .modal::before{content:'';display:block;width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 18px}
+}
+
+.divider{height:1px;background:var(--border);margin:16px 0}
+.text-sm{font-size:12px;color:var(--text3)}
+.text-center{text-align:center}
+.fw-bold{font-weight:700}
+.color-green{color:var(--green)}
+.color-red{color:var(--red)}
+.color-accent{color:var(--accent)}
+.color-yellow{color:var(--yellow)}
+.mt-4{margin-top:4px}.mt-8{margin-top:8px}.mt-12{margin-top:12px}.mt-16{margin-top:16px}
+.mb-8{margin-bottom:8px}.mb-12{margin-bottom:12px}
+.flex{display:flex}.items-center{align-items:center}.gap-8{gap:8px}.gap-12{gap:12px}.flex-1{flex:1}
+.loading{text-align:center;padding:40px;color:var(--text3)}
+.empty{text-align:center;padding:50px 20px;color:var(--text3)}
+.empty-icon{font-size:48px;margin-bottom:12px;display:block}
+
+/* Checklist */
+.check-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.check-item:last-child{border-bottom:none}
+.check-item label{font-size:13px;flex:1;cursor:pointer}
+.check-box{width:22px;height:22px;border:2px solid var(--border);border-radius:6px;background:var(--bg3);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
+.check-box.checked{background:var(--accent);border-color:var(--accent)}
+.check-box.checked::after{content:'✓';color:#fff;font-size:13px;font-weight:700}
+
+/* Assinatura */
+.sig-wrap{background:var(--bg3);border:1.5px solid var(--border);border-radius:var(--radius-sm);overflow:hidden}
+.sig-pad{display:block;width:100%;height:140px;cursor:crosshair;touch-action:none}
+.sig-toolbar{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-top:1px solid var(--border)}
+
+/* Fotos */
+.photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.photo-slot{aspect-ratio:1;background:var(--bg3);border:2px dashed var(--border);border-radius:var(--radius-sm);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;color:var(--text3);transition:all .2s;overflow:hidden;position:relative}
+.photo-slot:hover,.photo-slot:active{border-color:var(--accent);color:var(--accent)}
+.photo-slot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:calc(var(--radius-sm) - 2px)}
+.photo-slot-icon{font-size:22px;margin-bottom:4px}
+.photo-slot-label{font-size:10px;font-weight:500}
+.photo-input{display:none}
+
+/* Pagamento */
+.pagto-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.pagto-btn{background:var(--bg3);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px;text-align:center;cursor:pointer;transition:all .2s}
+.pagto-btn:hover{border-color:var(--accent)}
+.pagto-btn.selected{border-color:var(--accent);background:rgba(79,142,247,.12)}
+.pagto-icon{font-size:20px;margin-bottom:5px}
+.pagto-label{font-size:12px;color:var(--text2);font-weight:500}
+
+/* Parcelas */
+.parcela-info{background:var(--bg3);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-top:4px}
+.parcela-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0}
+.parcela-row:not(:last-child){border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:4px}
+
+/* Caixa */
+.caixa-header{background:linear-gradient(135deg,rgba(79,142,247,.12),rgba(124,58,237,.12));border:1px solid rgba(79,142,247,.25);border-radius:var(--radius);padding:22px;margin-bottom:16px;text-align:center}
+.caixa-valor{font-size:40px;font-weight:800;letter-spacing:-2px}
+.caixa-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-top:4px}
+.caixa-grid{display:flex;gap:1px;background:var(--border);border-radius:var(--radius-sm);overflow:hidden;margin-top:14px}
+.caixa-item{flex:1;background:var(--card);padding:12px;text-align:center}
+.caixa-item-val{font-size:16px;font-weight:700}
+.caixa-item-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+
+/* OS Steps */
+.os-steps{display:flex;align-items:center;margin:14px 0}
+.os-step{flex:1;text-align:center}
+.os-dot{width:12px;height:12px;border-radius:50%;background:var(--border);margin:0 auto 5px;transition:all .3s}
+.os-dot.done{background:var(--green);box-shadow:0 0 8px rgba(34,197,94,.4)}
+.os-dot.current{background:var(--yellow);box-shadow:0 0 8px rgba(245,158,11,.4)}
+.os-line{flex:2;height:2px;background:var(--border);margin-bottom:5px}
+.os-line.done{background:var(--green)}
+.os-step-lbl{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px}
+
+/* History */
+.hist-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.hist-item:last-child{border-bottom:none}
+.hist-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.hist-info{flex:1}
+.hist-title{font-size:13px;font-weight:600}
+.hist-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.hist-val{font-size:14px;font-weight:700;flex-shrink:0}
+
+/* Toast */
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);padding:11px 22px;border-radius:28px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,.4)}
+.toast.show{opacity:1}
+
+/* Recibo */
+.recibo{background:#fff;color:#111;border-radius:var(--radius-sm);padding:24px;font-family:'Courier New',monospace;font-size:12px;line-height:1.8}
+.recibo-title{text-align:center;font-size:18px;font-weight:bold;margin-bottom:4px}
+.recibo-sub{text-align:center;font-size:11px;color:#555;margin-bottom:12px}
+.recibo-line{border-top:1px dashed #999;margin:10px 0}
+.recibo-row{display:flex;justify-content:space-between}
+.recibo-total{font-size:14px;font-weight:bold}
+
+/* LOGIN */
+#loginScreen{position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;align-items:center;justify-content:center;padding:24px}
+.login-box{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:32px 28px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.login-logo{text-align:center;margin-bottom:28px}
+.login-brand{font-size:40px;font-weight:800;letter-spacing:-2px}
+.login-brand span{color:var(--accent)}
+.login-sub{font-size:11px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-top:4px}
+.login-title{font-size:16px;font-weight:600;margin-bottom:20px;color:var(--text2)}
+.err-msg{color:var(--red);font-size:12px;text-align:center;margin-top:10px;display:none}
+
+/* Itens venda */
+.item-venda{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:10px}
+.item-venda-info{flex:1}
+.item-remove{background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;padding:4px}
+
+/* Responsive */
+@media(max-width:900px){
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:768px){
+  .sidebar{display:none}
+  .main{margin-left:0}
+  .topbar{display:none}
+  .mobile-topbar{display:flex}
+  .mobile-nav{display:block}
+  .page-content{padding:14px;padding-top:68px;padding-bottom:80px}
+  .stats-grid{grid-template-columns:repeat(2,1fr);gap:10px}
+  .stat-value{font-size:22px}
+  .table-wrap{font-size:12px}
+  th,td{padding:9px 10px}
+  .row-2,.row-3{grid-template-columns:1fr}
+  .modal-actions{flex-direction:column}
+  .modal-actions .btn{width:100%}
+}
+@media(min-width:769px){
+  .fab-mobile{display:none}
+}
+.fab-mobile{position:fixed;bottom:90px;right:18px;width:52px;height:52px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;cursor:pointer;box-shadow:0 4px 18px rgba(79,142,247,.45);border:none;color:#fff;z-index:60;transition:transform .2s}
+.fab-mobile:active{transform:scale(.92)}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-brand">i-<span>flash</span></div>
+      <div class="login-sub">seu iphone pronto na hora</div>
+    </div>
+    <div class="login-title">Acesso ao sistema</div>
+    <div class="field"><label>Usuário</label><input id="loginUser" type="text" placeholder="usuário" autocomplete="username"></div>
+    <div class="field"><label>Senha</label><input id="loginPass" type="password" placeholder="••••••" autocomplete="current-password"></div>
+    <button class="btn btn-primary btn-lg" onclick="doLogin()">Entrar</button>
+    <div class="err-msg" id="loginErr"></div>
+    <div class="text-sm text-center mt-8">Usuários demo: admin / gerente / vendedor / caixa / tecnico — Senha: 1234</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <!-- SIDEBAR PC -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="brand">i-<span>flash</span></div>
+      <div class="brand-sub">sistema de gestão</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-item active" onclick="goTo('dash',this)" data-screen="dash"><span class="nav-icon">🏠</span>Dashboard</div>
+      <div class="nav-item" onclick="goTo('os',this)" data-screen="os"><span class="nav-icon">🔧</span>Ordens de Serviço</div>
+      <div class="nav-item" onclick="goTo('vendas',this)" data-screen="vendas"><span class="nav-icon">🛒</span>Vendas</div>
+      <div class="nav-item" onclick="goTo('cad',this)" data-screen="cad"><span class="nav-icon">📋</span>Cadastros</div>
+      <div class="nav-item" onclick="goTo('fin',this)" data-screen="fin"><span class="nav-icon">💰</span>Financeiro / Caixa</div>
+      <div class="nav-item" onclick="goTo('relatorio',this)" data-screen="relatorio"><span class="nav-icon">📊</span>Relatórios</div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info" onclick="openQR()">
+        <div class="user-avatar">👤</div>
+        <div><div class="user-name" id="sidebarUserName">-</div><div class="user-role" id="sidebarUserRole">-</div></div>
+        <span style="color:var(--text3);margin-left:auto">📱</span>
+      </div>
+      <button class="btn btn-secondary btn-sm" style="width:100%;margin-top:8px" onclick="doLogout()">⏻ Sair</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <!-- TOPBAR PC -->
+    <div class="topbar">
+      <div class="topbar-title" id="topbarTitle">Dashboard</div>
+      <div class="topbar-actions">
+        <button class="btn btn-secondary btn-sm" onclick="openQR()">📱 Abrir no Celular</button>
+        <div id="topbarBtn"></div>
+      </div>
+    </div>
+
+    <!-- MOBILE TOPBAR -->
+    <div class="mobile-topbar">
+      <div class="mobile-brand">i-<span>flash</span></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-secondary btn-sm" onclick="openQR()">📱</button>
+        <button class="btn btn-secondary btn-sm" onclick="doLogout()">⏻</button>
+      </div>
+    </div>
+
+    <div class="page-content">
+
+      <!-- DASHBOARD -->
+      <div class="screen active" id="screen-dash">
+        <div class="stats-grid">
+          <div class="stat-card blue"><div class="stat-icon">🔧</div><div class="stat-value" id="dOS">-</div><div class="stat-label">OS Abertas</div></div>
+          <div class="stat-card green"><div class="stat-icon">💰</div><div class="stat-value" id="dVendas">-</div><div class="stat-label">Vendas Hoje</div></div>
+          <div class="stat-card purple"><div class="stat-icon">👥</div><div class="stat-value" id="dClientes">-</div><div class="stat-label">Clientes</div></div>
+          <div class="stat-card yellow"><div class="stat-icon">📦</div><div class="stat-value" id="dEstoque">-</div><div class="stat-label">Estoque Baixo</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="card">
+            <div class="card-title">OS Recentes</div>
+            <div id="dashOS"><div class="loading">Carregando...</div></div>
+            <button class="btn btn-primary btn-sm mt-12" onclick="goTo('os',document.querySelector('[data-screen=os]'))">Ver todas as OS →</button>
+          </div>
+          <div class="card">
+            <div class="card-title">Caixa de Hoje</div>
+            <div class="caixa-grid" style="border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--border);background:none;margin-bottom:12px">
+              <div class="caixa-item"><div class="caixa-item-val color-green" id="dEntradas">-</div><div class="caixa-item-lbl">Entradas</div></div>
+              <div class="caixa-item" style="border-left:1px solid var(--border)"><div class="caixa-item-val color-red" id="dSaidas">-</div><div class="caixa-item-lbl">Saídas</div></div>
+              <div class="caixa-item" style="border-left:1px solid var(--border)"><div class="caixa-item-val color-accent" id="dSaldo">-</div><div class="caixa-item-lbl">Saldo</div></div>
+            </div>
+            <div class="card-title">Ações Rápidas</div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <button class="btn btn-primary" onclick="goTo('os',document.querySelector('[data-screen=os]'));setTimeout(()=>openNovaOS(),300)">🔧 Nova OS</button>
+              <button class="btn btn-success" onclick="goTo('vendas',document.querySelector('[data-screen=vendas]'));setTimeout(()=>openNovaVenda(),300)">🛒 Nova Venda</button>
+              <button class="btn btn-secondary" onclick="goTo('fin',document.querySelector('[data-screen=fin]'))">💰 Ver Caixa</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- OS -->
+      <div class="screen" id="screen-os">
+        <div class="section-title">
+          Ordens de Serviço
+          <button class="btn btn-primary" onclick="openNovaOS()">＋ Nova OS</button>
+        </div>
+        <div class="card" style="padding:12px 16px">
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+            <div class="search-bar" style="flex:1;min-width:200px;margin:0"><span>🔍</span><input id="osBusca" placeholder="Buscar OS, cliente, modelo..." oninput="loadOS()"></div>
+            <div class="tabs" style="margin:0;flex-shrink:0">
+              <div class="tab active" onclick="filterOS(this,'')">Todas</div>
+              <div class="tab" onclick="filterOS(this,'Aguardando')">Aguardando</div>
+              <div class="tab" onclick="filterOS(this,'Em andamento')">Andamento</div>
+              <div class="tab" onclick="filterOS(this,'Concluído')">Prontas</div>
+              <div class="tab" onclick="filterOS(this,'Entregue')">Entregues</div>
+            </div>
+          </div>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Nº OS</th><th>Cliente</th><th>Aparelho</th><th>Defeito</th><th>Técnico</th><th>Valor</th><th>Status</th><th>Ação</th></tr></thead>
+          <tbody id="osTable"><tr><td colspan="8" class="loading">Carregando...</td></tr></tbody>
+        </table></div>
+        <button class="fab-mobile" onclick="openNovaOS()">＋</button>
+      </div>
+
+      <!-- VENDAS -->
+      <div class="screen" id="screen-vendas">
+        <div class="section-title">
+          Vendas
+          <button class="btn btn-primary" onclick="openNovaVenda()">＋ Nova Venda</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px">
+          <div class="card" style="text-align:center;padding:16px"><div style="font-size:22px;font-weight:800;color:var(--green)" id="vTotal">-</div><div class="text-sm mt-4">Total do Mês</div></div>
+          <div class="card" style="text-align:center;padding:16px"><div style="font-size:22px;font-weight:800;color:var(--accent)" id="vQtd">-</div><div class="text-sm mt-4">Vendas</div></div>
+          <div class="card" style="text-align:center;padding:16px"><div style="font-size:22px;font-weight:800;color:var(--yellow)" id="vTicket">-</div><div class="text-sm mt-4">Ticket Médio</div></div>
+        </div>
+        <div class="card" style="padding:12px 16px;margin-bottom:14px">
+          <div class="search-bar" style="margin:0"><span>🔍</span><input id="vendaBusca" placeholder="Buscar venda, cliente..." oninput="loadVendas()"></div>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Data</th><th>Cliente</th><th>Descrição</th><th>Forma Pgto</th><th>Parcelas</th><th>Juros</th><th>Total</th><th>Recibo</th></tr></thead>
+          <tbody id="vendaTable"><tr><td colspan="8" class="loading">Carregando...</td></tr></tbody>
+        </table></div>
+        <button class="fab-mobile" onclick="openNovaVenda()">＋</button>
+      </div>
+
+      <!-- CADASTROS -->
+      <div class="screen" id="screen-cad">
+        <div class="section-title">Cadastros</div>
+        <div class="tabs">
+          <div class="tab active" onclick="cadTab(this,'pessoas')">👥 Pessoas</div>
+          <div class="tab" onclick="cadTab(this,'produtos')">📦 Produtos</div>
+          <div class="tab" onclick="cadTab(this,'dispositivos')">📱 Dispositivos</div>
+          <div class="tab" onclick="cadTab(this,'usuarios')">🔑 Usuários</div>
+        </div>
+
+        <!-- PESSOAS -->
+        <div id="cadPessoas">
+          <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+            <div class="search-bar" style="flex:1;min-width:180px;margin:0"><span>🔍</span><input id="pessoaBusca" placeholder="Buscar..." oninput="loadPessoas()"></div>
+            <div class="tabs" style="margin:0">
+              <div class="tab active" onclick="filterPessoa(this,'')">Todos</div>
+              <div class="tab" onclick="filterPessoa(this,'Cliente')">Clientes</div>
+              <div class="tab" onclick="filterPessoa(this,'Fornecedor')">Fornec.</div>
+              <div class="tab" onclick="filterPessoa(this,'Técnico')">Técnicos</div>
+            </div>
+            <button class="btn btn-primary" onclick="openModal('modalPessoa')">＋ Novo</button>
+          </div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Nome</th><th>Tipo</th><th>CPF/CNPJ</th><th>Telefone</th><th>E-mail</th><th>Ação</th></tr></thead>
+            <tbody id="pessoaTable"><tr><td colspan="6" class="loading">Carregando...</td></tr></tbody>
+          </table></div>
+        </div>
+
+        <!-- PRODUTOS -->
+        <div id="cadProdutos" style="display:none">
+          <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+            <div class="search-bar" style="flex:1;min-width:180px;margin:0"><span>🔍</span><input id="produtoBusca" placeholder="Buscar produto..." oninput="loadProdutos()"></div>
+            <button class="btn btn-primary" onclick="openModal('modalProduto')">＋ Novo</button>
+          </div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Produto</th><th>Categoria</th><th>Compatível</th><th>Estoque</th><th>Custo</th><th>Venda</th><th>Status</th><th>Ação</th></tr></thead>
+            <tbody id="produtoTable"><tr><td colspan="8" class="loading">Carregando...</td></tr></tbody>
+          </table></div>
+        </div>
+
+        <!-- DISPOSITIVOS -->
+        <div id="cadDispositivos" style="display:none">
+          <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+            <div class="search-bar" style="flex:1;min-width:180px;margin:0"><span>🔍</span><input id="dispBusca" placeholder="Buscar aparelho..." oninput="loadDispositivos()"></div>
+            <button class="btn btn-primary" onclick="openModal('modalDispositivo')">＋ Novo</button>
+          </div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Marca/Modelo</th><th>Tipo</th><th>IMEI</th><th>Estado</th><th>Custo</th><th>Venda</th><th>Status</th><th>Ação</th></tr></thead>
+            <tbody id="dispTable"><tr><td colspan="8" class="loading">Carregando...</td></tr></tbody>
+          </table></div>
+        </div>
+
+        <!-- USUÁRIOS -->
+        <div id="cadUsuarios" style="display:none">
+          <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
+            <button class="btn btn-primary" onclick="openModal('modalUsuario')">＋ Novo Usuário</button>
+          </div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Nome</th><th>Usuário</th><th>Perfil</th><th>Status</th><th>Ação</th></tr></thead>
+            <tbody id="usuarioTable"><tr><td colspan="5" class="loading">Carregando...</td></tr></tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- FINANCEIRO -->
+      <div class="screen" id="screen-fin">
+        <div class="section-title">Financeiro / Caixa</div>
+        <div class="caixa-header">
+          <div class="caixa-label">Saldo em Caixa</div>
+          <div class="caixa-valor color-green" id="finSaldo">-</div>
+          <div class="caixa-label mt-4" id="finData">-</div>
+          <div class="caixa-grid" style="margin-top:14px;border-radius:var(--radius-sm);overflow:hidden;border:1px solid rgba(79,142,247,.2)">
+            <div class="caixa-item"><div class="caixa-item-val color-green" id="finEntradas">-</div><div class="caixa-item-lbl">Entradas</div></div>
+            <div class="caixa-item" style="border-left:1px solid rgba(79,142,247,.2)"><div class="caixa-item-val color-red" id="finSaidas">-</div><div class="caixa-item-lbl">Saídas</div></div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+          <button class="btn btn-success" onclick="openAberturaCaixa()">🔓 Abrir Caixa</button>
+          <button class="btn btn-warning" onclick="openModal('modalLancamento')">＋ Lançamento</button>
+          <button class="btn btn-danger" onclick="fecharCaixa()">🔒 Fechar Caixa</button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="card">
+            <div class="card-title">Movimentos de Hoje</div>
+            <div id="finMovimentos"><div class="loading">Carregando...</div></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Por Forma de Pagamento</div>
+            <div id="finPorForma"><div class="loading">Carregando...</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RELATÓRIOS -->
+      <div class="screen" id="screen-relatorio">
+        <div class="section-title">Relatórios</div>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px">
+          <div class="card" style="cursor:pointer" onclick="showToast('Relatório gerado!')">
+            <div style="font-size:32px;margin-bottom:8px">📊</div>
+            <div style="font-size:15px;font-weight:600">Vendas por Período</div>
+            <div class="text-sm mt-4">Total de vendas, ticket médio e formas de pagamento</div>
+          </div>
+          <div class="card" style="cursor:pointer" onclick="showToast('Relatório gerado!')">
+            <div style="font-size:32px;margin-bottom:8px">🔧</div>
+            <div style="font-size:15px;font-weight:600">OS por Período</div>
+            <div class="text-sm mt-4">Ordens abertas, concluídas e receita de serviços</div>
+          </div>
+          <div class="card" style="cursor:pointer" onclick="showToast('Relatório gerado!')">
+            <div style="font-size:32px;margin-bottom:8px">📦</div>
+            <div style="font-size:15px;font-weight:600">Estoque</div>
+            <div class="text-sm mt-4">Produtos com estoque baixo e valor em estoque</div>
+          </div>
+          <div class="card" style="cursor:pointer" onclick="showToast('Relatório gerado!')">
+            <div style="font-size:32px;margin-bottom:8px">💰</div>
+            <div style="font-size:15px;font-weight:600">Fechamento de Caixa</div>
+            <div class="text-sm mt-4">Resumo por dia com entradas, saídas e saldo</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /page-content -->
+  </div><!-- /main -->
+
+  <!-- MOBILE NAV -->
+  <div class="mobile-nav">
+    <div class="mobile-nav-inner">
+      <div class="mobile-nav-item active" onclick="goTo('dash',this)"><span class="mobile-nav-icon">🏠</span><span class="mobile-nav-label">Início</span></div>
+      <div class="mobile-nav-item" onclick="goTo('os',this)"><span class="mobile-nav-icon">🔧</span><span class="mobile-nav-label">OS</span></div>
+      <div class="mobile-nav-item" onclick="goTo('vendas',this)"><span class="mobile-nav-icon">🛒</span><span class="mobile-nav-label">Vendas</span></div>
+      <div class="mobile-nav-item" onclick="goTo('cad',this)"><span class="mobile-nav-icon">📋</span><span class="mobile-nav-label">Cadastros</span></div>
+      <div class="mobile-nav-item" onclick="goTo('fin',this)"><span class="mobile-nav-icon">💰</span><span class="mobile-nav-label">Caixa</span></div>
+    </div>
+  </div>
+</div><!-- /app -->
+
+<!-- ══ MODAIS ══════════════════════════════════════ -->
+
+<!-- QR CODE -->
+<div class="modal-overlay" id="modalQR">
+  <div class="modal" style="max-width:380px;text-align:center">
+    <div class="modal-title" style="justify-content:center">📱 Abrir no Celular</div>
+    <p class="text-sm mb-12">Conecte o celular no mesmo Wi-Fi e escaneie o QR Code</p>
+    <div style="background:#fff;border-radius:12px;padding:16px;display:inline-block"><div id="qrcode"></div></div>
+    <div id="qrUrl" class="color-accent mt-12" style="font-size:14px;font-weight:600"></div>
+    <div class="text-sm mt-8">ou acesse o endereço acima no navegador do celular</div>
+    <button class="btn btn-secondary btn-lg mt-16" onclick="closeModal('modalQR')">Fechar</button>
+  </div>
+</div>
+
+<!-- NOVA OS -->
+<div class="modal-overlay" id="modalOS">
+  <div class="modal" style="max-width:620px">
+    <div class="modal-title">🔧 Nova Ordem de Serviço</div>
+    <div class="row-2">
+      <div class="field"><label>Cliente *</label><select id="osCliente"><option value="">Selecione...</option></select></div>
+      <div class="field"><label>Técnico *</label><select id="osTecnico"><option value="">Selecione...</option></select></div>
+    </div>
+    <div class="row-3">
+      <div class="field"><label>Marca</label><input id="osMarca" placeholder="Apple, Samsung..."></div>
+      <div class="field"><label>Modelo *</label><input id="osModelo" placeholder="iPhone 14 Pro..."></div>
+      <div class="field"><label>Cor</label><input id="osCor" placeholder="Preto, Prata..."></div>
+    </div>
+    <div class="row-2">
+      <div class="field"><label>IMEI</label><input id="osImei" placeholder="35xxxxxxxxxx"></div>
+      <div class="field"><label>Valor do Serviço (R$)</label><input id="osValor" type="number" placeholder="0,00" step="0.01"></div>
+    </div>
+    <div class="field"><label>Defeito Relatado *</label><textarea id="osDefeito" placeholder="Descreva detalhadamente o problema relatado pelo cliente..."></textarea></div>
+
+    <div class="divider"></div>
+    <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--text2)">✅ CHECKLIST DE RECEBIMENTO</div>
+    <div id="checklistOS">
+      <div class="check-item"><div class="check-box" onclick="toggleCheck(this)" data-item="Tela trincada/quebrada"></div><label>Tela trincada ou quebrada?</label></div>
+      <div class="check-item"><div class="check-box" onclick="toggleCheck(this)" data-item="Câmera com defeito"></div><label>Câmera com defeito?</label></div>
+      <div class="check-item"><div class="check-box" onclick="toggleCheck(this)" data-item="Botões funcionando"></div><label>Botões funcionando?</label></div>
+      <div class="check-item"><div class="check-box" onclick="toggleCheck(this)" data-item="Carregador incluso"></div><label>Carregador incluso?</label></div>
+      <div class="check-item"><div class="check-box" onclick="toggleCheck(this)" data-item="Carcaça danificada"></div><label>Carcaça/Tampa danificada?</label></div>
+      <div class="check-item"><div class="check-box" onclick="toggleCheck(this)" data-item="Alto-falante com defeito"></div><label>Alto-falante com defeito?</label></div>
+      <div class="check-item"><div class="check-box" onclick="toggleCheck(this)" data-item="Senha informada"></div><label>Senha do aparelho informada?</label></div>
+      <div class="check-item"><div class="check-box" onclick="toggleCheck(this)" data-item="Chip incluso"></div><label>Chip (SIM card) incluso?</label></div>
+    </div>
+
+    <div class="divider"></div>
+    <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--text2)">📸 FOTOS DO APARELHO — ENTRADA</div>
+    <div class="photo-grid">
+      <div class="photo-slot" onclick="triggerFoto(this,'foto_entrada_frente')"><div class="photo-slot-icon">📷</div><div class="photo-slot-label">Frente</div><img id="prev_entrada_frente" style="display:none"></div>
+      <div class="photo-slot" onclick="triggerFoto(this,'foto_entrada_verso')"><div class="photo-slot-icon">📷</div><div class="photo-slot-label">Verso</div><img id="prev_entrada_verso" style="display:none"></div>
+      <div class="photo-slot" onclick="triggerFoto(this,'foto_entrada_defeito')"><div class="photo-slot-icon">📷</div><div class="photo-slot-label">Defeito</div><img id="prev_entrada_defeito" style="display:none"></div>
+    </div>
+    <input type="file" class="photo-input" id="foto_entrada_frente" accept="image/*" capture="environment" onchange="previewFoto(this,'prev_entrada_frente')">
+    <input type="file" class="photo-input" id="foto_entrada_verso" accept="image/*" capture="environment" onchange="previewFoto(this,'prev_entrada_verso')">
+    <input type="file" class="photo-input" id="foto_entrada_defeito" accept="image/*" capture="environment" onchange="previewFoto(this,'prev_entrada_defeito')">
+
+    <div class="divider"></div>
+    <div style="font-size:13px;font-weight:700;margin-bottom:8px;color:var(--text2)">✍️ ASSINATURA DO CLIENTE — ENTRADA</div>
+    <div class="sig-wrap">
+      <canvas class="sig-pad" id="sigOS" width="560" height="140"></canvas>
+      <div class="sig-toolbar"><span class="text-sm">Cliente assina aqui confirmando as condições do aparelho</span><button class="btn btn-secondary btn-sm" onclick="clearSig('sigOS')">Limpar</button></div>
+    </div>
+    <div class="field mt-12"><label>Observações</label><textarea id="osObs" placeholder="Observações adicionais..."></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modalOS')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarOS()">🔧 Abrir OS</button>
+    </div>
+  </div>
+</div>
+
+<!-- OS DETALHE -->
+<div class="modal-overlay" id="modalOSDetalhe">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-title">
+      <span id="osdNumero">OS #0000</span>
+      <span class="badge" id="osdBadge">-</span>
+    </div>
+    <div class="os-steps">
+      <div class="os-step"><div class="os-dot" id="osdDot1"></div><div class="os-step-lbl">Entrada</div></div>
+      <div class="os-line" id="osdLine1"></div>
+      <div class="os-step"><div class="os-dot" id="osdDot2"></div><div class="os-step-lbl">Reparo</div></div>
+      <div class="os-line" id="osdLine2"></div>
+      <div class="os-step"><div class="os-dot" id="osdDot3"></div><div class="os-step-lbl">Pronto</div></div>
+      <div class="os-line" id="osdLine3"></div>
+      <div class="os-step"><div class="os-dot" id="osdDot4"></div><div class="os-step-lbl">Entregue</div></div>
+    </div>
+    <div class="card2" id="osdInfo"></div>
+
+    <div class="row-2 mt-12">
+      <div class="field"><label>Status</label>
+        <select id="osdStatus">
+          <option>Aguardando</option><option>Em andamento</option><option>Concluído</option><option>Entregue</option>
+        </select>
+      </div>
+      <div class="field"><label>Forma de Pagamento</label>
+        <select id="osdPagto">
+          <option>Dinheiro</option><option>Pix</option><option>Débito</option><option>Crédito</option><option>Transferência</option>
+        </select>
+      </div>
+    </div>
+    <div class="field"><label>Peças Utilizadas</label><input id="osdPecas" placeholder="Ex: Tela iPhone 14, Bateria..."></div>
+
+    <div style="font-size:13px;font-weight:700;margin:12px 0 8px;color:var(--text2)">📸 FOTOS — ENTREGA</div>
+    <div class="photo-grid">
+      <div class="photo-slot" onclick="triggerFoto(this,'foto_saida_frente')"><div class="photo-slot-icon">📷</div><div class="photo-slot-label">Frente</div><img id="prev_saida_frente" style="display:none"></div>
+      <div class="photo-slot" onclick="triggerFoto(this,'foto_saida_verso')"><div class="photo-slot-icon">📷</div><div class="photo-slot-label">Verso</div><img id="prev_saida_verso" style="display:none"></div>
+      <div class="photo-slot" onclick="triggerFoto(this,'foto_saida_consertado')"><div class="photo-slot-icon">📷</div><div class="photo-slot-label">Consertado</div><img id="prev_saida_consertado" style="display:none"></div>
+    </div>
+    <input type="file" class="photo-input" id="foto_saida_frente" accept="image/*" capture="environment" onchange="previewFoto(this,'prev_saida_frente')">
+    <input type="file" class="photo-input" id="foto_saida_verso" accept="image/*" capture="environment" onchange="previewFoto(this,'prev_saida_verso')">
+    <input type="file" class="photo-input" id="foto_saida_consertado" accept="image/*" capture="environment" onchange="previewFoto(this,'prev_saida_consertado')">
+
+    <div style="font-size:13px;font-weight:700;margin:14px 0 8px;color:var(--text2)">✍️ ASSINATURA — ENTREGA</div>
+    <div class="sig-wrap">
+      <canvas class="sig-pad" id="sigEntrega" width="560" height="130"></canvas>
+      <div class="sig-toolbar"><span class="text-sm">Cliente assina confirmando recebimento do aparelho</span><button class="btn btn-secondary btn-sm" onclick="clearSig('sigEntrega')">Limpar</button></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modalOSDetalhe')">Fechar</button>
+      <button class="btn btn-warning" onclick="gerarRecibo()">🧾 Recibo</button>
+      <button class="btn btn-primary" id="osdSalvarBtn">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- NOVA VENDA -->
+<div class="modal-overlay" id="modalVenda">
+  <div class="modal" style="max-width:620px">
+    <div class="modal-title">🛒 Nova Venda</div>
+    <div class="row-2">
+      <div class="field"><label>Cliente *</label><select id="vendaCliente"><option value="">Selecione...</option></select></div>
+      <div class="field"><label>Vendedor</label><select id="vendaVendedor"><option>Admin</option></select></div>
+    </div>
+
+    <div class="card2 mb-12">
+      <div class="card-title">Itens da Venda</div>
+      <div id="itensVenda"></div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <select id="selProduto" style="flex:1;background:var(--bg3);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--text);padding:9px 12px;font-size:13px;outline:none">
+          <option value="">Selecionar produto...</option>
+        </select>
+        <button class="btn btn-secondary" onclick="addItemVenda()">＋ Adicionar</button>
+      </div>
+      <div class="field mt-8"><label>Descrição Manual (se não estiver no estoque)</label><input id="vendaDescManual" placeholder="Ex: Serviço de reparo, produto avulso..."></div>
+    </div>
+
+    <div class="row-2">
+      <div class="field"><label>Valor Bruto (R$)</label><input id="vendaValor" type="number" placeholder="0,00" step="0.01" oninput="calcularVenda()"></div>
+      <div class="field"><label>Desconto (R$)</label><input id="vendaDesconto" type="number" placeholder="0,00" step="0.01" value="0" oninput="calcularVenda()"></div>
+    </div>
+
+    <div class="field"><label>Parcelas</label>
+      <select id="vendaParcelas" onchange="calcularVenda()">
+        <option value="1">À vista</option>
+        <option value="2">2x</option><option value="3">3x</option><option value="4">4x</option>
+        <option value="5">5x</option><option value="6">6x — sem juros</option>
+        <option value="7">7x — com juros (2% a.m.)</option><option value="8">8x — com juros</option>
+        <option value="9">9x — com juros</option><option value="10">10x — com juros</option>
+        <option value="12">12x — com juros</option>
+      </select>
+    </div>
+
+    <div class="parcela-info" id="parcelaInfo">
+      <div class="parcela-row"><span class="text-sm">Valor bruto</span><span class="fw-bold" id="piValorBruto">R$ 0,00</span></div>
+      <div class="parcela-row"><span class="text-sm">Desconto</span><span class="fw-bold color-red" id="piDesconto">- R$ 0,00</span></div>
+      <div class="parcela-row"><span class="text-sm">Juros</span><span class="fw-bold color-yellow" id="piJuros">R$ 0,00</span></div>
+      <div class="parcela-row"><span style="font-size:14px;font-weight:700">Total</span><span style="font-size:16px;font-weight:800;color:var(--green)" id="piTotal">R$ 0,00</span></div>
+      <div class="parcela-row"><span class="text-sm">Valor da parcela</span><span class="fw-bold color-accent" id="piParcela">R$ 0,00</span></div>
+    </div>
+
+    <div class="divider"></div>
+    <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--text2)">💳 FORMA DE PAGAMENTO</div>
+    <div class="pagto-grid" id="pagtoVenda">
+      <div class="pagto-btn selected" onclick="selPagto(this,'pagtoVenda')"><div class="pagto-icon">📲</div><div class="pagto-label">Pix</div></div>
+      <div class="pagto-btn" onclick="selPagto(this,'pagtoVenda')"><div class="pagto-icon">💰</div><div class="pagto-label">Dinheiro</div></div>
+      <div class="pagto-btn" onclick="selPagto(this,'pagtoVenda')"><div class="pagto-icon">💳</div><div class="pagto-label">Débito</div></div>
+      <div class="pagto-btn" onclick="selPagto(this,'pagtoVenda')"><div class="pagto-icon">💳</div><div class="pagto-label">Crédito</div></div>
+    </div>
+    <div class="field mt-8"><label>Observações</label><textarea id="vendaObs" rows="2" placeholder="Observações..."></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modalVenda')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarVenda()">✅ Finalizar Venda</button>
+    </div>
+  </div>
+</div>
+
+<!-- PESSOA -->
+<div class="modal-overlay" id="modalPessoa">
+  <div class="modal">
+    <div class="modal-title">👥 Nova Pessoa</div>
+    <div class="row-2">
+      <div class="field"><label>Tipo</label><select id="pTipo"><option>Cliente</option><option>Fornecedor</option><option>Técnico</option></select></div>
+      <div class="field"><label>Nome *</label><input id="pNome" placeholder="Nome completo..."></div>
+    </div>
+    <div class="row-2">
+      <div class="field"><label>CPF / CNPJ</label><input id="pCpf" placeholder="000.000.000-00"></div>
+      <div class="field"><label>WhatsApp *</label><input id="pTel" type="tel" placeholder="(16) 99999-0000"></div>
+    </div>
+    <div class="row-2">
+      <div class="field"><label>E-mail</label><input id="pEmail" type="email" placeholder="email@email.com"></div>
+      <div class="field"><label>Endereço</label><input id="pEnd" placeholder="Rua, número, bairro..."></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modalPessoa')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarPessoa()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- PRODUTO -->
+<div class="modal-overlay" id="modalProduto">
+  <div class="modal">
+    <div class="modal-title">📦 Novo Produto</div>
+    <div class="row-2">
+      <div class="field"><label>Nome *</label><input id="prNome" placeholder="Bateria iPhone 14..."></div>
+      <div class="field"><label>Categoria</label><select id="prCat"><option>Peça</option><option>Acessório</option><option>Cabo</option><option>Carregador</option><option>Capinha</option><option>Película</option></select></div>
+    </div>
+    <div class="field"><label>Compatível com</label><input id="prCompat" placeholder="iPhone 14, Samsung A54..."></div>
+    <div class="row-3">
+      <div class="field"><label>Estoque</label><input id="prEst" type="number" placeholder="0" min="0"></div>
+      <div class="field"><label>Mínimo</label><input id="prMin" type="number" placeholder="5" min="0"></div>
+      <div class="field"><label>Custo (R$)</label><input id="prCusto" type="number" placeholder="0,00" step="0.01"></div>
+    </div>
+    <div class="field"><label>Preço de Venda (R$)</label><input id="prVenda" type="number" placeholder="0,00" step="0.01"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modalProduto')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarProduto()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- DISPOSITIVO -->
+<div class="modal-overlay" id="modalDispositivo">
+  <div class="modal">
+    <div class="modal-title">📱 Novo Celular / Tablet</div>
+    <div class="row-3">
+      <div class="field"><label>Marca</label><select id="dMarca"><option>Apple</option><option>Samsung</option><option>Motorola</option><option>Xiaomi</option><option>Outro</option></select></div>
+      <div class="field"><label>Tipo</label><select id="dTipo"><option>Celular</option><option>Tablet</option></select></div>
+      <div class="field"><label>Armazenamento</label><select id="dArm"><option>32GB</option><option>64GB</option><option>128GB</option><option>256GB</option><option>512GB</option><option>1TB</option></select></div>
+    </div>
+    <div class="row-2">
+      <div class="field"><label>Modelo *</label><input id="dModelo" placeholder="iPhone 15, Galaxy S24..."></div>
+      <div class="field"><label>Cor</label><input id="dCor" placeholder="Preto, Branco, Azul..."></div>
+    </div>
+    <div class="row-2">
+      <div class="field"><label>IMEI</label><input id="dImei" placeholder="35xxxxxxxxx"></div>
+      <div class="field"><label>Estado</label><select id="dEstado"><option>Novo</option><option>Usado</option><option>Para peça</option></select></div>
+    </div>
+    <div class="row-2">
+      <div class="field"><label>Custo (R$)</label><input id="dCusto" type="number" placeholder="0,00" step="0.01"></div>
+      <div class="field"><label>Venda (R$)</label><input id="dVenda" type="number" placeholder="0,00" step="0.01"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modalDispositivo')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarDispositivo()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- USUÁRIO -->
+<div class="modal-overlay" id="modalUsuario">
+  <div class="modal">
+    <div class="modal-title">🔑 Novo Funcionário</div>
+    <div class="row-2">
+      <div class="field"><label>Nome *</label><input id="uNome" placeholder="Nome completo..."></div>
+      <div class="field"><label>Usuário (login) *</label><input id="uUsuario" placeholder="usuario123"></div>
+    </div>
+    <div class="row-2">
+      <div class="field"><label>Senha *</label><input id="uSenha" type="password" placeholder="••••••"></div>
+      <div class="field"><label>Perfil de Acesso</label>
+        <select id="uPerfil">
+          <option value="admin">👑 Administrador</option>
+          <option value="gerente">👔 Gerente</option>
+          <option value="vendedor">🛒 Vendedor</option>
+          <option value="caixa">💰 Caixa</option>
+          <option value="tecnico">🔧 Técnico</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modalUsuario')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarUsuario()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- LANÇAMENTO CAIXA -->
+<div class="modal-overlay" id="modalLancamento">
+  <div class="modal">
+    <div class="modal-title">💰 Novo Lançamento</div>
+    <div class="row-2">
+      <div class="field"><label>Tipo</label>
+        <select id="lancTipo">
+          <option value="entrada">✅ Entrada</option>
+          <option value="saida">❌ Saída</option>
+        </select>
+      </div>
+      <div class="field"><label>Valor (R$) *</label><input id="lancValor" type="number" placeholder="0,00" step="0.01"></div>
+    </div>
+    <div class="field"><label>Descrição *</label><input id="lancDesc" placeholder="Descrição do lançamento..."></div>
+    <div class="field"><label>Forma de Pagamento</label>
+      <select id="lancForma">
+        <option>Dinheiro</option><option>Pix</option><option>Débito</option><option>Crédito</option><option>Transferência</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modalLancamento')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarLancamento()">💾 Lançar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ABERTURA CAIXA -->
+<div class="modal-overlay" id="modalAbertura">
+  <div class="modal">
+    <div class="modal-title">🔓 Abertura de Caixa</div>
+    <div class="field"><label>Valor Inicial em Dinheiro (R$)</label><input id="aberturaValor" type="number" placeholder="0,00" step="0.01" value="0"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modalAbertura')">Cancelar</button>
+      <button class="btn btn-success btn-lg" onclick="salvarAbertura()">🔓 Abrir Caixa</button>
+    </div>
+  </div>
+</div>
+
+<!-- RECIBO -->
+<div class="modal-overlay" id="modalRecibo">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-title">🧾 Recibo</div>
+    <div id="reciboConteudo"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modalRecibo')">Fechar</button>
+      <button class="btn btn-primary" onclick="imprimirRecibo()">🖨️ Imprimir</button>
+      <button class="btn btn-success" onclick="showToast('Enviado via WhatsApp!')">📲 WhatsApp</button>
+    </div>
+  </div>
+</div>
+
+<!-- CLIENTE DETALHE -->
+<div class="modal-overlay" id="modalCliente">
+  <div class="modal" style="max-width:580px">
+    <div id="clienteConteudo"></div>
+    <button class="btn btn-secondary" onclick="closeModal('modalCliente')">Fechar</button>
+  </div>
+</div>
+
+<script>
+// ── PWA SERVICE WORKER ──────────────────────────────
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.register("/static/sw.js").then(()=>console.log("SW ok")).catch(e=>console.log("SW erro",e));
+}
+// ── TELA CHEIA ────────────────────────────────────
+function entrarTelaCheia(){
+  const el=document.documentElement;
+  if(el.requestFullscreen) el.requestFullscreen();
+  else if(el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+}
+document.addEventListener("click",function tcf(){
+  if(!document.fullscreenElement) entrarTelaCheia();
+  document.removeEventListener("click",tcf);
+},{once:true});
+// ── GLOBALS ────────────────────────────────────────
+let currentUser = null, osFilter = '', pessoaFilter = '', cadAtual = 'pessoas';
+let osAtualId = null, qrFeito = false, itensVenda = [], produtosList = [];
+let reciboAtual = '';
+
+const $ = id => document.getElementById(id);
+const fmt = v => 'R$ ' + parseFloat(v||0).toFixed(2).replace('.',',');
+const fmtK = v => { v = parseFloat(v||0); return v >= 1000 ? 'R$' + (v/1000).toFixed(1) + 'k' : fmt(v); };
+
+function showToast(msg, tipo='green') {
+  const t = $('toast');
+  t.textContent = msg;
+  t.style.background = tipo==='red' ? 'var(--red)' : tipo==='yellow' ? 'var(--yellow)' : 'var(--green)';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+function openModal(id) { $(id).classList.add('open'); }
+function closeModal(id) { $(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if(e.target===o) o.classList.remove('open'); });
+});
+function setTab(el, container) {
+  (container ? container : el.closest('.tabs')).querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+function toggleCheck(el) { el.classList.toggle('checked'); }
+function selPagto(el, gridId) {
+  $(gridId).querySelectorAll('.pagto-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function getPagto(gridId) {
+  const s = $(gridId).querySelector('.pagto-btn.selected .pagto-label');
+  return s ? s.textContent : 'Dinheiro';
+}
+function getChecklist(containerId) {
+  const items = [];
+  $(containerId).querySelectorAll('.check-box.checked').forEach(b => items.push(b.dataset.item));
+  return items.join(', ');
+}
+function badgeClass(s) {
+  const m = {'Aguardando':'badge-blue','Em andamento':'badge-yellow','Concluído':'badge-green','Entregue':'badge-purple'};
+  return m[s]||'badge-blue';
+}
+function perfil_icon(p) {
+  const m = {admin:'👑',gerente:'👔',vendedor:'🛒',caixa:'💰',tecnico:'🔧'};
+  return m[p]||'👤';
+}
+function perfil_badge(p) {
+  const m = {admin:'badge-yellow',gerente:'badge-orange',vendedor:'badge-blue',caixa:'badge-green',tecnico:'badge-purple'};
+  return m[p]||'badge-blue';
+}
+
+// ── FOTOS ──────────────────────────────────────────
+function triggerFoto(slot, inputId) { $(inputId).click(); }
+function previewFoto(input, prevId) {
+  if(!input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = $(prevId);
+    img.src = e.target.result;
+    img.style.display = 'block';
+    // Esconde ícones do slot pai
+    const slot = img.parentElement;
+    slot.querySelectorAll('.photo-slot-icon,.photo-slot-label').forEach(el => el.style.display='none');
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+// ── ASSINATURA ─────────────────────────────────────
+function initSig(id) {
+  const c = $(id); if(!c) return;
+  const ctx = c.getContext('2d');
+  let drawing = false;
+  const pos = e => {
+    const r = c.getBoundingClientRect();
+    const src = e.touches ? e.touches[0] : e;
+    return {x:(src.clientX-r.left)*(c.width/r.width), y:(src.clientY-r.top)*(c.height/r.height)};
+  };
+  c.addEventListener('mousedown', e => { drawing=true; const p=pos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); });
+  c.addEventListener('mousemove', e => { if(!drawing)return; const p=pos(e); ctx.lineTo(p.x,p.y); ctx.strokeStyle='#4f8ef7'; ctx.lineWidth=2; ctx.lineCap='round'; ctx.stroke(); });
+  c.addEventListener('mouseup', ()=>drawing=false);
+  c.addEventListener('touchstart', e=>{e.preventDefault();drawing=true;const p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);},{passive:false});
+  c.addEventListener('touchmove', e=>{e.preventDefault();if(!drawing)return;const p=pos(e);ctx.lineTo(p.x,p.y);ctx.strokeStyle='#4f8ef7';ctx.lineWidth=2.5;ctx.lineCap='round';ctx.stroke();},{passive:false});
+  c.addEventListener('touchend',()=>drawing=false);
+}
+function clearSig(id) { const c=$(id); if(c) c.getContext('2d').clearRect(0,0,c.width,c.height); }
+function getSig(id) { const c=$(id); return c?c.toDataURL():''; }
+initSig('sigOS'); initSig('sigEntrega');
+
+// ── LOGIN ──────────────────────────────────────────
+async function doLogin() {
+  const u=$('loginUser').value.trim(), p=$('loginPass').value.trim();
+  if(!u||!p){showLoginErr('Preencha todos os campos');return;}
+  try {
+    const r = await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({usuario:u,senha:p})});
+    const d = await r.json();
+    if(d.ok){
+      currentUser=d; $('loginErr').style.display='none';
+      $('loginScreen').style.display='none'; $('app').style.display='flex';
+      $('sidebarUserName').textContent=d.nome;
+      $('sidebarUserRole').textContent=d.perfil.charAt(0).toUpperCase()+d.perfil.slice(1);
+      loadDashboard(); loadOSSelects(); loadVendaSelects(); loadProdutosSelect();
+    } else { showLoginErr(d.msg||'Usuário ou senha incorretos'); }
+  } catch(e) { showLoginErr('Erro de conexão. Servidor rodando?'); }
+}
+function showLoginErr(m){const el=$('loginErr');el.textContent=m;el.style.display='block';}
+function doLogout(){$('app').style.display='none';$('loginScreen').style.display='flex';currentUser=null;}
+$('loginPass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+
+// ── NAVIGATION ─────────────────────────────────────
+const screenTitles = {dash:'Dashboard',os:'Ordens de Serviço',vendas:'Vendas',cad:'Cadastros',fin:'Financeiro / Caixa',relatorio:'Relatórios'};
+function goTo(screen, el) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item,.mobile-nav-item').forEach(n=>n.classList.remove('active'));
+  $('screen-'+screen).classList.add('active');
+  el.classList.add('active');
+  // Sync sidebar + mobile
+  document.querySelectorAll('[data-screen='+screen+']').forEach(n=>n.classList.add('active'));
+  if($('topbarTitle')) $('topbarTitle').textContent = screenTitles[screen]||'';
+  if(screen==='dash') loadDashboard();
+  else if(screen==='os') loadOS();
+  else if(screen==='vendas') loadVendas();
+  else if(screen==='fin') loadFinanceiro();
+  else if(screen==='cad') { cadTab(document.querySelector('.tabs .tab.active')||document.querySelector('.tabs .tab'), cadAtual); }
+}
+
+// ── QR CODE ────────────────────────────────────────
+async function openQR() {
+  openModal('modalQR');
+  if(qrFeito) return;
+  try {
+    const d = await fetch('/api/ip').then(r=>r.json());
+    $('qrUrl').textContent = d.url;
+    $('qrcode').innerHTML = '';
+    new QRCode($('qrcode'),{text:d.url,width:180,height:180,colorDark:'#000',colorLight:'#fff'});
+    qrFeito = true;
+  } catch(e) { $('qrUrl').textContent = 'http://localhost:5000'; }
+}
+
+// ── DASHBOARD ──────────────────────────────────────
+async function loadDashboard() {
+  try {
+    const [dash, cx] = await Promise.all([
+      fetch('/api/dashboard').then(r=>r.json()),
+      fetch('/api/caixa').then(r=>r.json())
+    ]);
+    $('dOS').textContent = dash.os_abertas;
+    $('dVendas').textContent = fmtK(dash.vendas_hoje);
+    $('dClientes').textContent = dash.clientes;
+    $('dEstoque').textContent = dash.estoque_baixo;
+    $('dEntradas').textContent = fmt(cx.entradas);
+    $('dSaidas').textContent = fmt(cx.saidas);
+    $('dSaldo').textContent = fmt(cx.saldo);
+    $('dashOS').innerHTML = dash.os_recentes.length ? dash.os_recentes.map(o=>`
+      <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);cursor:pointer" onclick="abrirOSDetalhe(${o.id})">
+        <span style="font-size:16px">📱</span>
+        <div style="flex:1"><div style="font-size:13px;font-weight:600">${o.modelo||'Aparelho'} — ${o.defeito||'-'}</div>
+        <div style="font-size:11px;color:var(--text3)">${o.cliente_nome||'—'} · ${o.numero}</div></div>
+        <span class="badge ${badgeClass(o.status)}">${o.status}</span>
+      </div>`).join('') : '<div class="empty" style="padding:20px"><span class="empty-icon">🔧</span>Nenhuma OS</div>';
+  } catch(e) {}
+}
+
+// ── OS ─────────────────────────────────────────────
+async function loadOSSelects() {
+  const [clientes, tecnicos] = await Promise.all([
+    fetch('/api/pessoas?tipo=Cliente').then(r=>r.json()),
+    fetch('/api/pessoas?tipo=Técnico').then(r=>r.json())
+  ]);
+  $('osCliente').innerHTML = '<option value="">Selecione o cliente...</option>' + clientes.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('');
+  $('osTecnico').innerHTML = '<option value="">Selecione o técnico...</option>' + tecnicos.map(t=>`<option value="${t.nome}">${t.nome}</option>`).join('');
+}
+function filterOS(el, status) { setTab(el); osFilter=status; loadOS(); }
+async function loadOS() {
+  const busca = $('osBusca').value;
+  let url = `/api/os?busca=${encodeURIComponent(busca)}`;
+  if(osFilter) url += `&status=${encodeURIComponent(osFilter)}`;
+  try {
+    const list = await fetch(url).then(r=>r.json());
+    $('osTable').innerHTML = list.length ? list.map(o=>`
+      <tr>
+        <td><div class="td-name">${o.numero}</div><div class="td-sub">${(o.data_entrada||'').substring(0,10)}</div></td>
+        <td><div class="td-name">${o.cliente_nome||'—'}</div></td>
+        <td><div class="td-name">${o.marca||''} ${o.modelo||''}</div><div class="td-sub">${o.imei||'—'}</div></td>
+        <td style="max-width:150px">${o.defeito||'—'}</td>
+        <td>${o.tecnico||'—'}</td>
+        <td class="fw-bold color-green">${fmt(o.valor_servico)}</td>
+        <td><span class="badge ${badgeClass(o.status)}">${o.status}</span></td>
+        <td><button class="btn btn-secondary btn-sm" onclick="abrirOSDetalhe(${o.id})">Ver</button></td>
+      </tr>`).join('') : '<tr><td colspan="8" class="empty" style="padding:40px"><span class="empty-icon">🔧</span>Nenhuma OS encontrada</td></tr>';
+  } catch(e){}
+}
+function openNovaOS() { loadOSSelects(); openModal('modalOS'); }
+async function salvarOS() {
+  const d = {
+    cliente_id: $('osCliente').value,
+    marca: $('osMarca').value,
+    modelo: $('osModelo').value,
+    cor: $('osCor').value,
+    imei: $('osImei').value,
+    defeito: $('osDefeito').value,
+    tecnico: $('osTecnico').value,
+    valor_servico: parseFloat($('osValor').value)||0,
+    checklist: getChecklist('checklistOS'),
+    observacoes: $('osObs').value,
+    assinatura_entrada: getSig('sigOS')
+  };
+  if(!d.cliente_id||!d.modelo){showToast('Preencha cliente e modelo','red');return;}
+  const r = await fetch('/api/os',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});
+  const res = await r.json();
+  if(res.ok){showToast('OS '+res.numero+' aberta com sucesso!');closeModal('modalOS');loadOS();loadDashboard();}
+}
+async function abrirOSDetalhe(id) {
+  osAtualId = id;
+  const os = await fetch('/api/os/'+id).then(r=>r.json());
+  $('osdNumero').textContent = os.numero;
+  $('osdBadge').className = 'badge '+badgeClass(os.status);
+  $('osdBadge').textContent = os.status;
+  $('osdStatus').value = os.status;
+  $('osdPagto').value = os.forma_pagamento||'Dinheiro';
+  $('osdPecas').value = '';
+  const steps=['Aguardando','Em andamento','Concluído','Entregue'];
+  const idx=steps.indexOf(os.status);
+  for(let i=1;i<=4;i++){
+    const dot=$('osdDot'+i),line=$('osdLine'+i);
+    dot.className='os-dot'+(i-1<idx?' done':i-1===idx?' current':'');
+    if(line) line.className='os-line'+(i-1<idx?' done':'');
+  }
+  $('osdInfo').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px">
+      <div><span style="color:var(--text3)">Cliente</span><div class="fw-bold mt-4">${os.cliente_nome||'—'}</div></div>
+      <div><span style="color:var(--text3)">Telefone</span><div class="fw-bold mt-4">${os.cliente_tel||'—'}</div></div>
+      <div><span style="color:var(--text3)">Aparelho</span><div class="fw-bold mt-4">${os.marca||''} ${os.modelo||''}</div></div>
+      <div><span style="color:var(--text3)">IMEI</span><div class="fw-bold mt-4">${os.imei||'—'}</div></div>
+      <div><span style="color:var(--text3)">Defeito</span><div class="fw-bold mt-4">${os.defeito||'—'}</div></div>
+      <div><span style="color:var(--text3)">Técnico</span><div class="fw-bold mt-4">${os.tecnico||'—'}</div></div>
+      <div><span style="color:var(--text3)">Checklist</span><div class="fw-bold mt-4" style="font-size:11px">${os.checklist||'—'}</div></div>
+      <div><span style="color:var(--text3)">Valor</span><div class="fw-bold color-green mt-4" style="font-size:16px">${fmt(os.valor_servico)}</div></div>
+    </div>`;
+  $('osdSalvarBtn').onclick = () => salvarOSStatus();
+  clearSig('sigEntrega');
+  openModal('modalOSDetalhe');
+}
+async function salvarOSStatus() {
+  const d={status:$('osdStatus').value,forma_pagamento:$('osdPagto').value,pecas_usadas:$('osdPecas').value,assinatura_saida:getSig('sigEntrega'),valor_servico:osAtualId};
+  const r=await fetch('/api/os/'+osAtualId,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});
+  const res=await r.json();
+  if(res.ok){showToast('OS atualizada!');closeModal('modalOSDetalhe');loadOS();loadDashboard();}
+}
+
+// ── VENDAS ─────────────────────────────────────────
+async function loadVendaSelects() {
+  const clientes=await fetch('/api/pessoas?tipo=Cliente').then(r=>r.json());
+  $('vendaCliente').innerHTML='<option value="">Selecione o cliente...</option>'+clientes.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('');
+}
+async function loadProdutosSelect() {
+  produtosList = await fetch('/api/produtos').then(r=>r.json());
+  $('selProduto').innerHTML='<option value="">Selecionar produto...</option>'+produtosList.map(p=>`<option value="${p.id}" data-preco="${p.preco_venda}" data-nome="${p.nome}">${p.nome} — ${fmt(p.preco_venda)} (Est: ${p.estoque})</option>`).join('');
+}
+function addItemVenda() {
+  const sel=$('selProduto');
+  const opt=sel.options[sel.selectedIndex];
+  const descManual=$('vendaDescManual').value.trim();
+  if(!opt.value && !descManual){showToast('Selecione um produto ou informe descrição','red');return;}
+  const item = opt.value ? {produto_id:parseInt(opt.value),descricao:opt.dataset.nome,preco_unitario:parseFloat(opt.dataset.preco)||0,quantidade:1,subtotal:parseFloat(opt.dataset.preco)||0} : {produto_id:null,descricao:descManual,preco_unitario:0,quantidade:1,subtotal:0};
+  itensVenda.push(item);
+  renderItensVenda();
+  sel.selectedIndex=0; $('vendaDescManual').value='';
+  // Atualiza valor total somando itens
+  const total = itensVenda.reduce((s,i)=>s+i.subtotal,0);
+  $('vendaValor').value = total.toFixed(2);
+  calcularVenda();
+}
+function renderItensVenda() {
+  $('itensVenda').innerHTML = itensVenda.length ? itensVenda.map((it,i)=>`
+    <div class="item-venda">
+      <div class="item-venda-info">
+        <div style="font-size:13px;font-weight:600">${it.descricao}</div>
+        <div style="font-size:11px;color:var(--text3)">${fmt(it.preco_unitario)} x ${it.quantidade} = ${fmt(it.subtotal)}</div>
+      </div>
+      <button class="item-remove" onclick="removeItem(${i})">✕</button>
+    </div>`).join('') : '<div class="text-sm" style="padding:8px 0;color:var(--text3)">Nenhum item adicionado</div>';
+}
+function removeItem(i) { itensVenda.splice(i,1); renderItensVenda(); calcularVenda(); }
+async function calcularVenda() {
+  const valor=parseFloat($('vendaValor').value)||0;
+  const desc=parseFloat($('vendaDesconto').value)||0;
+  const parcelas=parseInt($('vendaParcelas').value)||1;
+  const base=valor-desc;
+  try {
+    const r=await fetch('/api/calcular_parcelas',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({valor:base,parcelas})});
+    const d=await r.json();
+    $('piValorBruto').textContent=fmt(valor);
+    $('piDesconto').textContent='- '+fmt(desc);
+    $('piJuros').textContent=d.sem_juros?'Sem juros':fmt(d.juros);
+    $('piJuros').style.color=d.sem_juros?'var(--green)':'var(--yellow)';
+    $('piTotal').textContent=fmt(d.total);
+    $('piParcela').textContent=parcelas>1?`${parcelas}x de ${fmt(d.valor_parcela)}`:'À vista';
+  } catch(e){}
+}
+async function loadVendas() {
+  const busca=$('vendaBusca').value;
+  const list=await fetch(`/api/vendas?busca=${encodeURIComponent(busca)}`).then(r=>r.json());
+  const total=list.reduce((s,v)=>s+v.valor_total,0);
+  const ticket=list.length?total/list.length:0;
+  $('vTotal').textContent=fmt(total);
+  $('vQtd').textContent=list.length;
+  $('vTicket').textContent=fmt(ticket);
+  $('vendaTable').innerHTML=list.length?list.map(v=>`
+    <tr>
+      <td>${(v.data||'').substring(0,10)}</td>
+      <td class="td-name">${v.cliente_nome||'—'}</td>
+      <td>${v.descricao||'—'}</td>
+      <td><span class="badge badge-blue">${v.forma_pagamento}</span></td>
+      <td>${v.parcelas>1?v.parcelas+'x':'À vista'}</td>
+      <td class="${v.juros>0?'color-yellow':'color-green'}">${v.juros>0?fmt(v.juros):'—'}</td>
+      <td class="fw-bold color-green">${fmt(v.valor_total)}</td>
+      <td><button class="btn btn-secondary btn-sm" onclick="verRecibo(${v.id})">🧾</button></td>
+    </tr>`).join('') : '<tr><td colspan="8" class="empty" style="padding:40px">Nenhuma venda</td></tr>';
+}
+function openNovaVenda() { loadVendaSelects(); loadProdutosSelect(); itensVenda=[]; renderItensVenda(); calcularVenda(); openModal('modalVenda'); }
+async function salvarVenda() {
+  const cliente_id=$('vendaCliente').value;
+  const valor=parseFloat($('vendaValor').value)||0;
+  if(!cliente_id||!valor){showToast('Preencha cliente e valor','red');return;}
+  const d={cliente_id,descricao:itensVenda.map(i=>i.descricao).join(', ')||$('vendaDescManual').value||'Venda',valor_bruto:valor,desconto:parseFloat($('vendaDesconto').value)||0,forma_pagamento:getPagto('pagtoVenda'),parcelas:parseInt($('vendaParcelas').value)||1,observacoes:$('vendaObs').value,itens:itensVenda};
+  const r=await fetch('/api/vendas',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});
+  const res=await r.json();
+  if(res.ok){showToast(`Venda finalizada! ${fmt(res.valor_total)}`);closeModal('modalVenda');itensVenda=[];loadVendas();loadDashboard();loadFinanceiro();}
+}
+async function verRecibo(id) {
+  const v=await fetch(`/api/vendas?busca=`).then(r=>r.json()).then(l=>l.find(x=>x.id===id));
+  if(!v) return;
+  gerarReciboVenda(v);
+}
+function gerarReciboVenda(v) {
+  const html=`<div class="recibo">
+    <div class="recibo-title">i-flash®</div>
+    <div class="recibo-sub">seu iphone pronto na hora</div>
+    <div class="recibo-line"></div>
+    <div class="recibo-row"><span>Recibo Nº</span><span>#${v.id}</span></div>
+    <div class="recibo-row"><span>Data</span><span>${(v.data||'').substring(0,10)}</span></div>
+    <div class="recibo-row"><span>Cliente</span><span>${v.cliente_nome||'—'}</span></div>
+    <div class="recibo-row"><span>Descrição</span><span>${v.descricao||'—'}</span></div>
+    <div class="recibo-line"></div>
+    <div class="recibo-row"><span>Valor Bruto</span><span>${fmt(v.valor_bruto)}</span></div>
+    ${v.desconto>0?`<div class="recibo-row"><span>Desconto</span><span>- ${fmt(v.desconto)}</span></div>`:''}
+    ${v.juros>0?`<div class="recibo-row"><span>Juros</span><span>${fmt(v.juros)}</span></div>`:''}
+    <div class="recibo-row recibo-total"><span>TOTAL</span><span>${fmt(v.valor_total)}</span></div>
+    <div class="recibo-row"><span>Pagamento</span><span>${v.forma_pagamento}${v.parcelas>1?' — '+v.parcelas+'x de '+fmt(v.valor_parcela):''}</span></div>
+    <div class="recibo-line"></div>
+    <div style="text-align:center;font-size:11px">Obrigado pela preferência!</div>
+  </div>`;
+  $('reciboConteudo').innerHTML = html;
+  reciboAtual = html;
+  openModal('modalRecibo');
+}
+function gerarRecibo() {
+  // Recibo da OS atual
+  const num = $('osdNumero').textContent;
+  const html=`<div class="recibo">
+    <div class="recibo-title">i-flash®</div>
+    <div class="recibo-sub">seu iphone pronto na hora</div>
+    <div class="recibo-line"></div>
+    <div class="recibo-row"><span>OS</span><span>${num}</span></div>
+    <div class="recibo-row"><span>Data</span><span>${new Date().toLocaleDateString('pt-BR')}</span></div>
+    <div class="recibo-row"><span>Serviço</span><span>${$('osdInfo').querySelector('[style*="Defeito"] + *')?.textContent||'Serviço'}</span></div>
+    <div class="recibo-row"><span>Forma Pgto</span><span>${$('osdPagto').value}</span></div>
+    <div class="recibo-line"></div>
+    <div class="recibo-row recibo-total"><span>TOTAL</span><span>Ver OS</span></div>
+    <div class="recibo-line"></div>
+    <div style="text-align:center;font-size:11px">Obrigado pela preferência!</div>
+  </div>`;
+  $('reciboConteudo').innerHTML = html;
+  openModal('modalRecibo');
+}
+function imprimirRecibo() { window.print(); }
+
+// ── CADASTROS ──────────────────────────────────────
+function cadTab(el, tipo) {
+  if(el) setTab(el);
+  cadAtual = tipo||cadAtual;
+  ['cadPessoas','cadProdutos','cadDispositivos','cadUsuarios'].forEach(id=>$(id).style.display='none');
+  $('cad'+cadAtual.charAt(0).toUpperCase()+cadAtual.slice(1)).style.display='block';
+  if(cadAtual==='pessoas') loadPessoas();
+  else if(cadAtual==='produtos') loadProdutos();
+  else if(cadAtual==='dispositivos') loadDispositivos();
+  else if(cadAtual==='usuarios') loadUsuarios();
+}
+// Pessoas
+let pessoaFiltro='';
+function filterPessoa(el,tipo){setTab(el);pessoaFiltro=tipo;loadPessoas();}
+async function loadPessoas(){
+  const busca=$('pessoaBusca').value;
+  let url=`/api/pessoas?busca=${encodeURIComponent(busca)}`;
+  if(pessoaFiltro) url+=`&tipo=${encodeURIComponent(pessoaFiltro)}`;
+  const list=await fetch(url).then(r=>r.json());
+  const icons={Cliente:'👤',Fornecedor:'🏢',Técnico:'🔧'};
+  const badges={Cliente:'badge-blue',Fornecedor:'badge-purple',Técnico:'badge-green'};
+  $('pessoaTable').innerHTML=list.length?list.map(p=>`
+    <tr style="cursor:pointer" onclick="${p.tipo==='Cliente'?'abrirCliente('+p.id+')':''}">
+      <td><div class="td-name">${icons[p.tipo]||'👤'} ${p.nome}</div></td>
+      <td><span class="badge ${badges[p.tipo]||'badge-blue'}">${p.tipo}</span></td>
+      <td>${p.cpf_cnpj||'—'}</td>
+      <td>${p.telefone||'—'}</td>
+      <td>${p.email||'—'}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="event.stopPropagation();delPessoa(${p.id})">✕</button></td>
+    </tr>`).join(''):'<tr><td colspan="6" class="empty" style="padding:40px">Nenhuma pessoa</td></tr>';
+}
+async function salvarPessoa(){
+  const d={nome:$('pNome').value,tipo:$('pTipo').value,cpf_cnpj:$('pCpf').value,telefone:$('pTel').value,email:$('pEmail').value,endereco:$('pEnd').value};
+  if(!d.nome){showToast('Informe o nome','red');return;}
+  await fetch('/api/pessoas',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});
+  showToast('Pessoa cadastrada!');closeModal('modalPessoa');loadPessoas();
+  ['pNome','pCpf','pTel','pEmail','pEnd'].forEach(id=>$(id).value='');
+}
+async function delPessoa(id){if(!confirm('Remover esta pessoa?'))return;await fetch('/api/pessoas/'+id,{method:'DELETE'});loadPessoas();}
+async function abrirCliente(id){
+  const [h,pessoas]=await Promise.all([fetch('/api/pessoas/'+id+'/historico').then(r=>r.json()),fetch('/api/pessoas').then(r=>r.json())]);
+  const p=pessoas.find(x=>x.id===id)||{};
+  $('clienteConteudo').innerHTML=`
+    <div class="modal-title">👤 ${p.nome}</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px">
+      <div class="card2" style="text-align:center"><div style="font-size:20px;font-weight:800;color:var(--accent)">${h.ordens.length}</div><div class="text-sm mt-4">OS</div></div>
+      <div class="card2" style="text-align:center"><div style="font-size:20px;font-weight:800;color:var(--green)">${fmt(h.total_gasto)}</div><div class="text-sm mt-4">Total Gasto</div></div>
+      <div class="card2" style="text-align:center"><div style="font-size:20px;font-weight:800;color:var(--yellow)">${h.vendas.length}</div><div class="text-sm mt-4">Compras</div></div>
+    </div>
+    <div class="card-title mb-8">Histórico de OS</div>
+    ${h.ordens.map(o=>`<div class="hist-item"><div class="hist-icon" style="background:rgba(79,142,247,.1)">🔧</div><div class="hist-info"><div class="hist-title">${o.numero} — ${o.modelo}</div><div class="hist-sub">${(o.data_entrada||'').substring(0,10)} · ${o.status}</div></div><div class="hist-val color-green">${fmt(o.valor_servico)}</div></div>`).join('')||'<div class="text-sm">Nenhuma OS</div>'}
+    <div class="card-title mb-8 mt-12">Compras</div>
+    ${h.vendas.map(v=>`<div class="hist-item"><div class="hist-icon" style="background:rgba(34,197,94,.1)">🛒</div><div class="hist-info"><div class="hist-title">${v.descricao||'Venda'}</div><div class="hist-sub">${(v.data||'').substring(0,10)} · ${v.forma_pagamento}</div></div><div class="hist-val color-green">${fmt(v.valor_total)}</div></div>`).join('')||'<div class="text-sm">Nenhuma compra</div>'}
+    <div class="divider"></div>`;
+  openModal('modalCliente');
+}
+// Produtos
+async function loadProdutos(){
+  const busca=$('produtoBusca').value;
+  const list=await fetch(`/api/produtos?busca=${encodeURIComponent(busca)}`).then(r=>r.json());
+  $('produtoTable').innerHTML=list.length?list.map(p=>{
+    const baixo=p.estoque<=p.estoque_min;
+    return`<tr><td><div class="td-name">${p.nome}</div></td><td>${p.categoria||'—'}</td><td>${p.compativel||'—'}</td>
+      <td><span class="fw-bold ${baixo?'color-red':''}">${p.estoque}</span></td>
+      <td>${fmt(p.preco_custo)}</td><td class="fw-bold">${fmt(p.preco_venda)}</td>
+      <td><span class="badge ${baixo?'badge-red':'badge-green'}">${baixo?'Estoque Baixo':'OK'}</span></td>
+      <td><button class="btn btn-danger btn-sm" onclick="delProduto(${p.id})">✕</button></td></tr>`;
+  }).join(''):'<tr><td colspan="8" class="empty" style="padding:40px">Nenhum produto</td></tr>';
+}
+async function salvarProduto(){
+  const d={nome:$('prNome').value,categoria:$('prCat').value,compativel:$('prCompat').value,estoque:parseInt($('prEst').value)||0,estoque_min:parseInt($('prMin').value)||5,preco_custo:parseFloat($('prCusto').value)||0,preco_venda:parseFloat($('prVenda').value)||0};
+  if(!d.nome){showToast('Informe o nome','red');return;}
+  await fetch('/api/produtos',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});
+  showToast('Produto cadastrado!');closeModal('modalProduto');loadProdutos();loadProdutosSelect();
+}
+async function delProduto(id){if(!confirm('Remover produto?'))return;await fetch('/api/produtos/'+id,{method:'DELETE'});loadProdutos();}
+// Dispositivos
+async function loadDispositivos(){
+  const busca=$('dispBusca').value;
+  const list=await fetch(`/api/dispositivos?busca=${encodeURIComponent(busca)}`).then(r=>r.json());
+  $('dispTable').innerHTML=list.length?list.map(d=>`
+    <tr><td><div class="td-name">${d.marca} ${d.modelo}</div><div class="td-sub">${d.cor||''} ${d.armazenamento||''}</div></td>
+    <td>${d.tipo}</td><td>${d.imei||'—'}</td>
+    <td><span class="badge ${d.estado==='Novo'?'badge-green':'badge-yellow'}">${d.estado}</span></td>
+    <td>${fmt(d.preco_custo)}</td><td class="fw-bold color-green">${fmt(d.preco_venda)}</td>
+    <td><span class="badge ${d.status==='Disponível'?'badge-green':'badge-blue'}">${d.status}</span></td>
+    <td><button class="btn btn-danger btn-sm" onclick="delDisp(${d.id})">✕</button></td></tr>`).join(''):'<tr><td colspan="8" class="empty" style="padding:40px">Nenhum aparelho</td></tr>';
+}
+async function salvarDispositivo(){
+  const d={marca:$('dMarca').value,modelo:$('dModelo').value,tipo:$('dTipo').value,armazenamento:$('dArm').value,cor:$('dCor').value,imei:$('dImei').value,estado:$('dEstado').value,preco_custo:parseFloat($('dCusto').value)||0,preco_venda:parseFloat($('dVenda').value)||0};
+  if(!d.modelo){showToast('Informe o modelo','red');return;}
+  await fetch('/api/dispositivos',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});
+  showToast('Aparelho cadastrado!');closeModal('modalDispositivo');loadDispositivos();
+}
+async function delDisp(id){if(!confirm('Remover aparelho?'))return;await fetch('/api/dispositivos/'+id,{method:'DELETE'});loadDispositivos();}
+// Usuários
+async function loadUsuarios(){
+  const list=await fetch('/api/usuarios').then(r=>r.json());
+  $('usuarioTable').innerHTML=list.map(u=>`
+    <tr><td><div class="td-name">${perfil_icon(u.perfil)} ${u.nome}</div></td>
+    <td>@${u.usuario}</td>
+    <td><span class="badge ${perfil_badge(u.perfil)}">${u.perfil}</span></td>
+    <td><span class="badge ${u.ativo?'badge-green':'badge-red'}">${u.ativo?'Ativo':'Inativo'}</span></td>
+    <td><button class="btn btn-danger btn-sm" onclick="delUsuario(${u.id})">✕</button></td></tr>`).join('');
+}
+async function salvarUsuario(){
+  const d={nome:$('uNome').value,usuario:$('uUsuario').value,senha:$('uSenha').value,perfil:$('uPerfil').value};
+  if(!d.nome||!d.usuario||!d.senha){showToast('Preencha todos os campos','red');return;}
+  const r=await fetch('/api/usuarios',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});
+  const res=await r.json();
+  if(res.ok){showToast('Funcionário cadastrado!');closeModal('modalUsuario');loadUsuarios();}
+  else showToast(res.msg||'Erro ao cadastrar','red');
+}
+async function delUsuario(id){if(!confirm('Desativar usuário?'))return;await fetch('/api/usuarios/'+id,{method:'DELETE'});loadUsuarios();}
+
+// ── FINANCEIRO ─────────────────────────────────────
+async function loadFinanceiro(){
+  const d=await fetch('/api/caixa').then(r=>r.json());
+  $('finSaldo').textContent=fmt(d.saldo);
+  $('finSaldo').style.color=d.saldo>=0?'var(--green)':'var(--red)';
+  $('finData').textContent='Hoje · '+new Date().toLocaleDateString('pt-BR');
+  $('finEntradas').textContent=fmt(d.entradas);
+  $('finSaidas').textContent=fmt(d.saidas);
+  $('finMovimentos').innerHTML=d.movimentos.length?d.movimentos.map(m=>`
+    <div class="hist-item">
+      <div class="hist-icon" style="background:${m.tipo==='entrada'?'rgba(34,197,94,.1)':'rgba(239,68,68,.1)'}">${m.tipo==='entrada'?'💰':'💸'}</div>
+      <div class="hist-info"><div class="hist-title">${m.descricao||'—'}</div><div class="hist-sub">${m.forma_pagamento} · ${(m.criado_em||'').substring(11,16)}</div></div>
+      <div class="hist-val ${m.tipo==='entrada'?'color-green':'color-red'}">${m.tipo==='entrada'?'+':'-'}${fmt(m.valor)}</div>
+    </div>`).join(''):'<div class="empty" style="padding:30px"><span class="empty-icon">💰</span>Nenhum movimento hoje</div>';
+  const formas=Object.entries(d.por_forma);
+  $('finPorForma').innerHTML=formas.length?formas.map(([k,v])=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:8px"><span>${k==='Pix'?'📲':k==='Dinheiro'?'💵':k==='Débito'?'💳':k==='Crédito'?'💳':'🏦'}</span><span class="fw-bold">${k}</span></div>
+      <span class="fw-bold color-green">${fmt(v)}</span>
+    </div>`).join(''):'<div class="text-sm" style="padding:16px 0">Sem entradas hoje</div>';
+}
+function openAberturaCaixa(){openModal('modalAbertura');}
+async function salvarAbertura(){
+  const r=await fetch('/api/caixa/abertura',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({valor_inicial:parseFloat($('aberturaValor').value)||0,usuario:currentUser?.nome||'admin'})});
+  const d=await r.json();
+  if(d.ok){showToast('Caixa aberto!');closeModal('modalAbertura');loadFinanceiro();}
+  else showToast(d.msg||'Erro','red');
+}
+async function salvarLancamento(){
+  const d={tipo:$('lancTipo').value,descricao:$('lancDesc').value,valor:parseFloat($('lancValor').value)||0,forma_pagamento:$('lancForma').value};
+  if(!d.descricao||!d.valor){showToast('Preencha descrição e valor','red');return;}
+  await fetch('/api/caixa',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});
+  showToast('Lançamento registrado!');closeModal('modalLancamento');$('lancDesc').value='';$('lancValor').value='';loadFinanceiro();loadDashboard();
+}
+async function fecharCaixa(){
+  if(!confirm('Confirma o fechamento do caixa?'))return;
+  const d=await fetch('/api/caixa').then(r=>r.json());
+  showToast(`Caixa fechado! Saldo: ${fmt(d.saldo)}`);
+}
+</script>
+</body>
+</html>
