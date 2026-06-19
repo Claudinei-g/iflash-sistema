@@ -425,6 +425,22 @@ def index():
 def uploaded_file(filename):
     return send_from_directory(UPLOAD_FOLDER, filename)
 
+@app.route('/icon-192.png')
+def icon192():
+    return send_from_directory('.', 'icon-192.png')
+
+@app.route('/icon-512.png')
+def icon512():
+    return send_from_directory('.', 'icon-512.png')
+
+@app.route('/apple-touch-icon.png')
+def apple_icon():
+    return send_from_directory('.', 'apple-touch-icon.png')
+
+@app.route('/manifest.json')
+def manifest():
+    return send_from_directory('.', 'manifest.json')
+
 # ── LOGIN ─────────────────────────────────────────
 @app.route('/api/login', methods=['POST'])
 def login():
